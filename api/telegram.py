@@ -134,7 +134,7 @@ def home():
         'message': 'Telegram bot webhook is active'
     })
 
-@app.route('/api/telegram', methods=['POST'])
+@app.route('/', methods=['POST'])
 def webhook():
     """Handle incoming Telegram webhooks"""
     if not BOT_TOKEN:
