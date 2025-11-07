@@ -3,4 +3,6 @@ pycryptodome
 gunicorn
 Flask
 colorama
+python-telegram-bot==20.7
+
 
