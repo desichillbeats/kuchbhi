@@ -170,6 +170,5 @@ def webhook():
         print(f"Webhook error: {e}")
         return jsonify({'error': str(e)}), 500
 
-# For local testing
-if __name__ == '__main__':
-    app.run(debug=True)
+# Vercel serverless function handler
+handler = app
