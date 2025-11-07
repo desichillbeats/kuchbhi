@@ -1,6 +1,8 @@
 import os
 import re
 import requests
+import time
+from collections import defaultdict
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -9,6 +11,10 @@ API_URL = 'https://kuchbhi-alpha.vercel.app/api/get-key'
 
 # Telegram Bot Token (You need to set this as environment variable)
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN_HERE')
+
+# Rate limiting configuration
+user_last_request = defaultdict(float)
+RATE_LIMIT_SECONDS = 30  # Minimum 30 seconds between requests per user
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /start is issued."""
@@ -80,11 +86,86 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📖 **Bot Commands:**\n\n"
         "/start - Start the bot\n"
         "/generate - Generate a new key\n"
+                "/key - Get a key (alias for /generate)\n"
         "/help - Show this help message\n\n"
         "⚠️ **Important:**\n"
         "Keys expire in 10 minutes after generation!"
     )
     await update.message.reply_text(help_text, parse_mode='Markdown')
+
+async def key(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /key command with rate limiting and security measures."""
+        user_id = update.effective_user.id
+        current_time = time.time()
+
+    # Check rate limiting
+    last_request_time = user_last_request[user_id]
+    time_diff = current_time - last_request_time
+
+    if time_diff < RATE_LIMIT_SECONDS:
+                wait_time = int(RATE_LIMIT_SECONDS - time_diff)
+                await update.message.reply_text(
+                                f"⏱️ Please wait {wait_time} seconds before requesting another key.\n\n"
+                                f"⚠️ Rate limit: 1 request per {RATE_LIMIT_SECONDS} seconds for security."
+                            )
+                return
+
+    # Update last request time
+    user_last_request[user_id] = current_time
+
+    # Send initial message
+    message = await update.message.reply_text("🔄 Generating your key...")
+
+    try:
+                # Make API request with timeout
+                response = requests.get(API_URL, timeout=10)
+                data = response.json()
+
+        # Extract and validate key
+        key = None
+
+        if 'key' in data:
+                        key = data['key']
+                    elif 'failed_url' in data:
+                                    match = re.search(r'key=([^&\s]+)', data['failed_url'])
+                                    key = match.group(1) if match else None
+                                elif 'error' in data and 'key=' in data['error']:
+                                                match = re.search(r'key=([A-Za-z0-9]+)', data['error'])
+                                                key = match.group(1) if match else None
+
+        # Validate key format (alphanumeric, 8-20 chars)
+        if key and re.match(r'^[A-Za-z0-9]{8,20}$', key):
+                        success_message = (
+                                            f"✅ Your Key is Ready! 🎉\n\n"
+                                            f"🔑 Key: `{key}`\n\n"
+                                            f"⚠️ **Important:**\n"
+                                            f"• Use this key within 10 minutes\n"
+                                            f"• After that, it will expire\n\n"
+                                            f"Tap to copy the key!"
+                                        )
+                        await message.edit_text(success_message, parse_mode='Markdown')
+                    else:
+                                    await message.edit_text(
+                                                        "❌ Error: Could not extract valid key from API.\n\n"
+                                                        "Please try again with /key or /generate"
+                                                    )
+
+    except requests.exceptions.Timeout:
+        await message.edit_text(
+                        "❌ Request timeout. API took too long to respond.\n\n"
+                        "Please try again with /key"
+                    )
+    except requests.exceptions.RequestException as e:
+        await message.edit_text(
+                        "❌ Network error occurred.\n\n"
+                        "Please check your connection and try again with /key"
+                    )
+    except Exception as e:
+        # Don't expose internal errors to users
+        await message.edit_text(
+                        "❌ An unexpected error occurred.\n\n"
+                        "Please try again with /key"
+                    )
 
 def main():
     """Start the bot."""
@@ -95,6 +176,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("generate", generate_key))
     application.add_handler(CommandHandler("help", help_command))
+        application.add_handler(CommandHandler("key", key))
 
     # Start the Bot
     print("Bot is starting...")
