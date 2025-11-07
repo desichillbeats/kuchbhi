@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Key is Ready</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+        }
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 bg-[#121826]">
+    <div class="w-full max-w-md bg-[#262d3d] rounded-xl shadow-lg text-gray-200 p-7 space-y-6">
+        <div class="text-center">
+            <h1 class="font-bold text-3xl text-white">Your Key is Ready! \ud83c\udf89</h1>
+        </div>
+        <div class="text-center">
+            <button id="generateKeyButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#262d3d] focus:ring-blue-500 w-full flex items-center justify-center space-x-2">
+                <span id="generateButtonText">Generate Your Key Here</span>
+                <div id="spinner" class="spinner hidden"></div>
+            </button>
+        </div>
+        <div id="keySection" class="bg-[#394251] rounded-lg px-4 py-3 flex items-center justify-between hidden">
+            <span id="keyContent" class="font-sans text-xl font-medium text-white tracking-wider truncate"></span>
+            <button id="copyButton" class="flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-3 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#394251] focus:ring-blue-500">
+                <svg id="copyIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <svg id="checkIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden text-white"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="buttonText">Copy</span>
+            </button>
+        </div>
+        <div id="alertSection" class="bg-[#1c3a3a]/60 border border-[#2d8d8d] text-[#9ae6b4] px-4 py-3 rounded-lg flex items-start space-x-3 hidden">
+            <svg class="w-6 h-6 flex-shrink-0 text-[#9ae6b4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+                <p class="font-bold text-white">Please use this key within 10 minutes!</p>
+                <p class="text-sm">After that, it will expire and won't work anymore.</p>
+            </div>
+        </div>
+        <div id="statusSection" class="bg-gray-800/50 border border-gray-600 text-gray-300 px-4 py-3 rounded-lg flex items-start space-x-3 hidden">
+            <div id="statusIcon" class="w-6 h-6 flex-shrink-0"></div>
+            <div>
+                <p id="statusTitle" class="font-bold">Status</p>
+                <p id="statusMessage" class="text-sm">Initializing...</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        const API_URL = 'https://kuchbhi-kdky.onrender.com/api/get-key';
+        const generateKeyButton = document.getElementById('generateKeyButton');
+        const generateButtonText = document.getElementById('generateButtonText');
+        const spinner = document.getElementById('spinner');
+        const keySection = document.getElementById('keySection');
+        const alertSection = document.getElementById('alertSection');
+        const statusSection = document.getElementById('statusSection');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusMessage = document.getElementById('statusMessage');
+        const keyContentSpan = document.getElementById('keyContent');
+        const copyButton = document.getElementById('copyButton');
+        const copyIcon = document.getElementById('copyIcon');
+        const checkIcon = document.getElementById('checkIcon');
+        const buttonText = document.getElementById('buttonText');
+        const originalButtonText = buttonText.textContent;
+        
+        function showLoading(isLoading) {
+            generateKeyButton.disabled = isLoading;
+            spinner.classList.toggle('hidden', !isLoading);
+            generateButtonText.textContent = isLoading ? 'Generating...' : 'Generate Your Key Here';
+            keySection.classList.add('hidden');
+            alertSection.classList.add('hidden');
+            if (!isLoading) {
+                statusSection.classList.add('hidden');
+            }
+        }
+        
+        function showStatus(type, title, message) {
+            statusSection.classList.remove('hidden');
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+            if (type === 'error') {
+                statusSection.className = "bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg flex items-start space-x-3";
+                statusIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            } else {
+                statusSection.className = "bg-gray-800/50 border border-gray-600 text-gray-300 px-4 py-3 rounded-lg flex items-start space-x-3";
+                statusIcon.innerHTML = `<svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            }
+        }
+        
+        function showResult(key) {
+            keyContentSpan.innerText = key;
+            keySection.classList.remove('hidden');
+            alertSection.classList.remove('hidden');
+            statusSection.classList.add('hidden');
+        }
+        
+        function extractKeyFromUrl(url) {
+            const match = url.match(/[?&]key=([^&]+)/);
+            return match ? match[1] : null;
+        }
+        
+        function extractKeyFromResponse(data) {
+            if (data.success && data.key) {
+                return data.key;
+            }
+            if (data.failed_url) {
+                const key = extractKeyFromUrl(data.failed_url);
+                if (key) return key;
+            }
+            if (data.error && data.error.includes('key=')) {
+                const match = data.error.match(/key=([A-Za-z0-9]+)/);
+                if (match) return match[1];
+            }
+            return null;
+        }
+        
+        async function generateKey() {
+            showLoading(true);
+            showStatus('info', 'Connecting to API', 'Requesting key from server...');
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                showStatus('info', 'Processing Response', 'Extracting key from response...');
+                const data = await response.json();
+                const key = extractKeyFromResponse(data);
+                if (key) {
+                    showResult(key);
+                } else {
+                    throw new Error('Could not extract key from response');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('error', 'Error Generating Key', error.message || 'Failed to generate key. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        generateKeyButton.addEventListener('click', generateKey);
+        
+        copyButton.addEventListener('click', () => {
+            const textToCopy = keyContentSpan.innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                copyIcon.classList.add('hidden');
+                checkIcon.classList.remove('hidden');
+                buttonText.textContent = 'Copied!';
+                copyButton.classList.remove('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300');
+                copyButton.classList.add('bg-green-500', 'text-white');
+                copyButton.disabled = true;
+                setTimeout(() => {
+                    copyIcon.classList.remove('hidden');
+                    checkIcon.classList.add('hidden');
+                    buttonText.textContent = originalButtonText;
+                    copyButton.classList.add('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300');
+                    copyButton.classList.remove('bg-green-500', 'text-white');
+                    copyButton.disabled = false;
+                }, 2000);
+            }).catch(err => {
+                console.error('Could not copy text:', err);
+            });
+        });
+    </script>
+</body>
+</html>
