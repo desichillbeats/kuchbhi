@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Generator 🎉</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #334155;
+            border-radius: 24px;
+            padding: 48px 40px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 32px;
+        }
+
+        .generate-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            margin-top: 32px;
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .key-box {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .key-text {
+            color: #e2e8f0;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            flex: 1;
+        }
+
+        .copy-btn {
+            background: #475569;
+            color: #e2e8f0;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #64748b;
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+            color: white;
+        }
+
+        .alert-box {
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 16px;
+            color: #6ee7b7;
+            font-size: 14px;
+            line-height: 1.6;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="initialScreen">
+            <h1>Ready! 🎉</h1>
+            <button class="generate-btn" id="generateBtn" onclick="generateKey()">
+                <span id="btnText">Generate Your Key Here</span>
+            </button>
+        </div>
+
+        <div class="result-container" id="resultScreen">
+            <h1>Your Key is Ready! 🎉</h1>
+            
+            <div class="key-box">
+                <div class="key-text" id="keyText">-</div>
+                <button class="copy-btn" id="copyBtn" onclick="copyKey()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span id="copyBtnText">Copy</span>
+                </button>
+            </div>
+
+            <div class="alert-box">
+                <div class="alert-icon">!</div>
+                <div>
+                    <strong>Please use this key within 10 minutes!</strong><br>
+                    After that, it will expire and won't work anymore.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://kuchbhi-alpha.vercel.app/api/get-key';
+
+        async function generateKey() {
+            const btn = document.getElementById('generateBtn');
+            const btnText = document.getElementById('btnText');
+            
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="spinner"></span>Generating...';
+
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                let key = null;
+                if (data.key) {
+                    key = data.key;
+                } else if (data.failed_url) {
+                    const match = data.failed_url.match(/key=([^&]+)/);
+                    key = match ? match[1] : null;
+                } else if (data.error && data.error.includes('key=')) {
+                    const match = data.error.match(/key=([A-Za-z0-9]+)/);
+                    key = match ? match[1] : null;
+                }
+
+                if (key) {
+                    showResult(key);
+                } else {
+                    throw new Error('Could not extract key');
+                }
+            } catch (error) {
+                alert('Error generating key. Please try again.');
+                btn.disabled = false;
+                btnText.textContent = 'Generate Your Key Here';
+            }
+        }
+
+        function showResult(key) {
+            document.getElementById('initialScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('show');
+            document.getElementById('keyText').textContent = key;
+        }
+
+        function copyKey() {
+            const keyText = document.getElementById('keyText').textContent;
+            const copyBtn = document.getElementById('copyBtn');
+            const copyBtnText = document.getElementById('copyBtnText');
+            
+            navigator.clipboard.writeText(keyText).then(() => {
+                copyBtn.classList.add('copied');
+                copyBtnText.textContent = 'Copied!';
+                
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtnText.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
