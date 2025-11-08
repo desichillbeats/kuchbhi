@@ -2,7 +2,9 @@ requests
 pycryptodome
 gunicorn
 Flask
+flask-cors
 colorama
 python-telegram-bot==20.7
+
 
 
