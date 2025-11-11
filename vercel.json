@@ -5,5 +5,15 @@
       "src": "api/index.py",
       "use": "@vercel/python"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/key-generator.html"
+    },
+    {
+      "source": "/key-generator.html",
+      "destination": "/key-generator.html"
+    }
   ]
 }
