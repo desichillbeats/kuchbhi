@@ -10,7 +10,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
@@ -21,12 +20,6 @@
             padding: 20px;
             color: #e2e8f0;
         }
-
-        body.light {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #1a202c;
-        }
-
         .container {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
@@ -37,50 +30,7 @@
             width: 100%;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
             text-align: center;
-            position: relative;
         }
-
-        body.light .container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
-        }
-
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 20px;
-            cursor: pointer;
-            color: #ffffff;
-            transition: all 0.3s ease;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        body.light .theme-toggle {
-            color: #4a5568;
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        body.light .theme-toggle:hover {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
         h1 {
             color: #ffffff;
             font-size: 32px;
@@ -88,12 +38,32 @@
             margin-bottom: 32px;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
-
-        body.light h1 {
-            color: #2d3748;
-            text-shadow: none;
+        .input-group {
+            margin-bottom: 24px;
+            text-align: left;
         }
-
+        label {
+            display: block;
+            color: #a0aec0;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        input[type="text"] {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #ffffff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
         .generate-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -105,22 +75,16 @@
             cursor: pointer;
             width: 100%;
             transition: all 0.3s ease;
-            position: relative;
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
-
         .generate-btn:hover:not(:disabled) {
             transform: translateY(-3px);
             box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
         }
-
         .generate-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
         }
-
         .spinner {
             display: inline-block;
             width: 16px;
@@ -131,27 +95,28 @@
             animation: spin 0.8s linear infinite;
             margin-right: 8px;
         }
-
-        body.light .spinner {
-            border-color: #4a5568;
-        }
-
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
         .result-container {
             margin-top: 32px;
             display: none;
         }
-
         .result-container.show {
             display: block;
         }
-
+        .timer-box {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: #ffd54f;
+            font-size: 18px;
+            font-weight: 600;
+        }
         .key-box {
             background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 24px;
@@ -160,14 +125,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            min-height: 64px;
         }
-
-        body.light .key-box {
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
         .key-text {
             color: #ffffff;
             font-size: 24px;
@@ -175,14 +133,7 @@
             letter-spacing: 1px;
             flex: 1;
             word-break: break-all;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
-
-        body.light .key-text {
-            color: #2d3748;
-            text-shadow: none;
-        }
-
         .copy-btn {
             background: rgba(255, 255, 255, 0.15);
             color: #ffffff;
@@ -190,92 +141,56 @@
             border-radius: 12px;
             padding: 12px;
             font-size: 14px;
-            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 6px;
-            flex-shrink: 0;
-            min-width: 44px;
-            justify-content: center;
         }
-
-        body.light .copy-btn {
-            background: rgba(0, 0, 0, 0.05);
-            color: #4a5568;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
         .copy-btn:hover {
             background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-1px);
         }
-
-        body.light .copy-btn:hover {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
         .copy-btn.copied {
             background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
             border-color: transparent;
-            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
         }
-
-        .alert-box {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 16px;
-            padding: 16px;
-            color: #c6f6d5;
-            font-size: 14px;
-            line-height: 1.6;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            text-align: left;
-            backdrop-filter: blur(10px);
-        }
-
-        body.light .alert-box {
-            background: rgba(16, 185, 129, 0.1);
-            border-color: rgba(16, 185, 129, 0.2);
-            color: #22543d;
-        }
-
-        .alert-icon {
-            flex-shrink: 0;
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
         .hidden {
             display: none;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            color: #fca5a5;
+            margin-top: 16px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <button id="themeToggle" class="theme-toggle">☀️</button>
         <div id="initialScreen">
-            <h1>Ready! 🎉</h1>
+            <h1>Get Your Key 🔑</h1>
+            <div class="input-group">
+                <label for="linkInput">Paste your link from nanolinks, arolinks, or lksfy:</label>
+                <input type="text" id="linkInput" placeholder="https://nanolinks.com/...">
+            </div>
             <button class="generate-btn" id="generateBtn" onclick="generateKey()">
-                <span id="btnText">Generate Your Key Here</span>
+                <span id="btnText">Generate Key</span>
             </button>
+            <div id="errorMessage" class="error-message hidden"></div>
+        </div>
+
+        <div class="result-container" id="timerScreen">
+            <h1>Key Generating... ⏳</h1>
+            <div class="timer-box" id="timerDisplay">
+                Please wait: <span id="timerText">2:18</span>
+            </div>
+            <p style="color: #a0aec0; font-size: 14px;">Your key will be revealed after the timer completes.</p>
         </div>
 
         <div class="result-container" id="resultScreen">
             <h1>Your Key is Ready! 🎉</h1>
-            
             <div class="key-box">
                 <div class="key-text" id="keyText">-</div>
                 <button class="copy-btn" id="copyBtn" onclick="copyKey()">
@@ -285,90 +200,91 @@
                     </svg>
                 </button>
             </div>
-
-            <div class="alert-box">
-                <div class="alert-icon">!</div>
-                <div>
-                    <strong>Please use this key within 10 minutes!</strong><br>
-                    After that, it will expire and won't work anymore.
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://kuchbhi-alpha.vercel.app/api/get-key';
-
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches;
-        if (isLightMode) {
-            document.body.classList.add('light');
-            themeToggle.textContent = '🌙';
-        } else {
-            themeToggle.textContent = '☀️';
-        }
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('light');
-            themeToggle.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
-        });
-
-        // Subscription prompt function
-        function promptSubscription() {
-            const channelUrl = 'https://www.youtube.com/@desichill_beats?sub_confirmation=1';
-            const userConfirmed = confirm(
-                `SUBSCRIBE TO DESI CHILL BEATS for updates and support!\n\n` +
-                `Click OK after subscribing (or if you already have), or Cancel to skip.\n\n` +
-                `Subscribe here: ${channelUrl}`
-            );
-            if (userConfirmed) {
-                window.open(channelUrl, '_blank');
-                return true;
-            }
-            return false;
-        }
+        const API_URL = 'https://kuchbhi-alpha.vercel.app/api/extract-key';
 
         async function generateKey() {
-            // Add subscription check
-            if (!promptSubscription()) {
+            const linkInput = document.getElementById('linkInput');
+            const link = linkInput.value.trim();
+            const btn = document.getElementById('generateBtn');
+            const btnText = document.getElementById('btnText');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Hide error message
+            errorMessage.classList.add('hidden');
+
+            // Validate input
+            if (!link) {
+                showError('Please enter a link');
                 return;
             }
 
-            const btn = document.getElementById('generateBtn');
-            const btnText = document.getElementById('btnText');
-            
+            // Validate domain
+            const supportedDomains = ['nanolinks', 'arolinks', 'lksfy'];
+            if (!supportedDomains.some(domain => link.includes(domain))) {
+                showError('Please use a link from nanolinks.com, arolinks.com, or lksfy.com');
+                return;
+            }
+
             btn.disabled = true;
             btnText.innerHTML = '<span class="spinner"></span>Generating...';
 
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                
-                let key = null;
-                if (data.key) {
-                    key = data.key;
-                } else if (data.failed_url) {
-                    const match = data.failed_url.match(/key=([^&]+)/);
-                    key = match ? match[1] : null;
-                } else if (data.error && data.error.includes('key=')) {
-                    const match = data.error.match(/key=([A-Za-z0-9]+)/);
-                    key = match ? match[1] : null;
-                }
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ link: link })
+                });
 
-                if (key) {
-                    showResult(key);
+                const data = await response.json();
+
+                if (data.success && data.key) {
+                    // Start timer with key
+                    startTimer(data.key);
                 } else {
-                    throw new Error('Could not extract key');
+                    throw new Error(data.error || 'Failed to extract key');
                 }
             } catch (error) {
-                alert('Error generating key. Please try again.');
+                showError('Error: ' + error.message);
                 btn.disabled = false;
-                btnText.textContent = 'Generate Your Key Here';
+                btnText.textContent = 'Generate Key';
             }
         }
 
-        function showResult(key) {
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        function startTimer(key) {
             document.getElementById('initialScreen').classList.add('hidden');
+            document.getElementById('timerScreen').classList.add('show');
+
+            let remainingSeconds = 138; // 2 minutes 18 seconds (2.3 minutes)
+            const timerText = document.getElementById('timerText');
+
+            const timerInterval = setInterval(() => {
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                remainingSeconds--;
+
+                if (remainingSeconds < 0) {
+                    clearInterval(timerInterval);
+                    showResult(key);
+                }
+            }, 1000);
+        }
+
+        function showResult(key) {
+            document.getElementById('timerScreen').classList.remove('show');
             document.getElementById('resultScreen').classList.add('show');
             document.getElementById('keyText').textContent = key;
         }
@@ -376,15 +292,21 @@
         function copyKey() {
             const keyText = document.getElementById('keyText').textContent;
             const copyBtn = document.getElementById('copyBtn');
-            
+
             navigator.clipboard.writeText(keyText).then(() => {
                 copyBtn.classList.add('copied');
-                
                 setTimeout(() => {
                     copyBtn.classList.remove('copied');
                 }, 2000);
             });
         }
+
+        // Allow Enter key to submit
+        document.getElementById('linkInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateKey();
+            }
+        });
     </script>
 </body>
 </html>
