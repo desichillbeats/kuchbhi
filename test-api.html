@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Testing Backend API</h1>
+    <button onclick="testAPI()">Test with lksfy link</button>
+    <div id="result"></div>
+    
+    <script>
+    async function testAPI() {
+        const link = 'https://lksfy.com/dLoCri3RjP';
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = 'Testing...please wait (this may take 2-3 minutes)';
+        
+        try {
+            const response = await fetch('/api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ link: link })
+            });
+            
+            const data = await response.json();
+            resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        } catch (error) {
+            resultDiv.innerHTML = 'Error: ' + error.message;
+        }
+    }
+    </script>
+</body>
+</html>
