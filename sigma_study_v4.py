@@ -14,6 +14,10 @@ Domain-based routing:
 Flags:
   --ssl-bypass    : Disable SSL verification (requests.verify=False). Handy for Termux/testing.
   --debug         : Show debug/background traces.
+   --telegram      : Enable Telegram bot mode to fetch key URL from @sigma_keygen_bot
+    --api-id        : Your Telegram API ID (get from https://my.telegram.org)
+     --api-hash      : Your Telegram API hash
+      --phone         : Your phone number with country code (e.g., +1234567890)
 
 If you want to target a different URL, set environment variable TARGET_URL (no CLI flags needed).
 """
@@ -63,6 +67,90 @@ DEFAULT_USER_AGENT = "Dart/3.8 (dart:io)"
 KEY = "k6kW8r#Tz3f;"
 
 HEADER_NAMES = ("x-request-id", "x-payload", "authorization", "x-data")
+
+
+# ==================== TELEGRAM BOT INTEGRATION ====================
+def get_keyurl_from_telegram(api_id, api_hash, phone, debug=False):
+      """
+          Connects to Telegram and fetches the latest key URL from @sigma_keygen_bot
+
+                  Args:
+                          api_id: Your Telegram API ID (get from https://my.telegram.org)
+                                  api_hash: Your Telegram API hash
+                                          phone: Your phone number with country code (e.g., +1234567890)
+                                                  debug: Enable debug output
+
+                                                          Returns:
+                                                                  key_url (str) if found, None otherwise
+                                                                      """
+      try:
+                from telethon.sync import TelegramClient
+                from telethon.tl.types import InputMessagesFilterUrl
+            except ImportError:
+                      err("Telegram integration requires 'telethon'. Install: pip install telethon")
+                      return None
+
+    info("Connecting to Telegram...")
+
+    try:
+              client = TelegramClient('sigma_session', api_id, api_hash)
+              client.start(phone=phone)
+
+        info("Connected! Fetching messages from @sigma_keygen_bot...")
+
+        # Get recent messages from the bot
+        messages = client.get_messages('@sigma_keygen_bot', limit=20)
+
+        # Search for lksfy.com URLs in the messages
+        for msg in messages:
+                      if msg.text:
+                                        # Look for supported domain URLs
+                                        urls = re.findall(r'https?://(?:nanolinks|arolinks|lksfy)\.(?:com|in)/\w+', msg.text)
+                                        if urls:
+                                                              key_url = urls[0]
+                                                              ok(f"Found key URL from Telegram: {key_url}")
+                                                              client.disconnect()
+                                                              return key_url
+
+        # If no URL found in recent messages, try to interact with the bot
+        info("No URL found in recent messages. Sending '/start' command...")
+
+        # Send the start command to see bot menu
+        client.send_message('@sigma_keygen_bot', '/start')
+        time.sleep(2)
+
+        # Get the latest message which should have buttons
+        messages = client.get_messages('@sigma_keygen_bot', limit=1)
+
+        if messages and messages[0].buttons:
+                      # Try to click "Generate Key (Server 1)" button
+                      for row in messages[0].buttons:
+                                        for button in row:
+                                                              if 'server 1' in button.text.lower() or 'generate key' in button.text.lower():
+                                                                                        info(f"Clicking button: {button.text}")
+                                                                                        messages[0].click(button)
+                                                                                        time.sleep(3)
+
+                        # Get the response
+                        new_messages = client.get_messages('@sigma_keygen_bot', limit=1)
+                        if new_messages and new_messages[0].text:
+                                                      urls = re.findall(r'https?://(?:nanolinks|arolinks|lksfy)\.(?:com|in)/\w+', new_messages[0].text)
+                                                      if urls:
+                                                                                        key_url = urls[0]
+                                                                                        ok(f"Got key URL after clicking button: {key_url}")
+                                                                                        client.disconnect()
+                                                                                        return key_url
+
+        err("Could not find key URL from @sigma_keygen_bot")
+        client.disconnect()
+        return None
+
+    except Exception as e:
+        err(f"Telegram integration failed: {e}")
+        if debug:
+                      raise
+                  return None
+# ==================== END TELEGRAM INTEGRATION ====================
 def get_initial_response_headers(target_url, user_agent, verify, debug):
     session = requests.Session()
     session.headers.update({"User-Agent": user_agent})
@@ -490,6 +578,10 @@ def main():
     parser = argparse.ArgumentParser(description="Auto extract gt key (defaults to zoo0.pages.dev).")
     parser.add_argument("--ssl-bypass", action="store_true", help="Disable SSL verification (requests.verify=False).")
     parser.add_argument("--debug", action="store_true", help="Show debug/background traces.")
+      parser.add_argument("--telegram", action="store_true", help="Enable Telegram bot mode to fetch key URL from @sigma_keygen_bot")
+    parser.add_argument("--api-id", type=str, help="Telegram API ID (required for --telegram mode)")
+    parser.add_argument("--api-hash", type=str, help="Telegram API hash (required for --telegram mode)")
+    parser.add_argument("--phone", type=str, help="Phone number with country code (required for --telegram mode)")
     args = parser.parse_args()
 
     # Determine target URL: env TARGET_URL or default
@@ -506,6 +598,49 @@ def main():
         except Exception:
             dbg("Could not import urllib3 to suppress warnings", debug)
 
+
+    # Check if Telegram mode is enabled
+    if args.telegram:
+              # Validate required arguments for Telegram mode
+              if not args.api_id or not args.api_hash or not args.phone:
+                            err("Telegram mode requires --api-id, --api-hash, and --phone arguments")
+                            sys.exit(1)
+
+        # Get key URL from Telegram
+        key_url = get_keyurl_from_telegram(args.api_id, args.api_hash, args.phone, debug)
+
+        if not key_url:
+                      err("Failed to get key URL from Telegram")
+                      sys.exit(1)
+
+        # Process the key URL directly using existing handlers
+        info(f"Processing key URL: {key_url}")
+        session = requests.Session()
+        session.headers.update({"User-Agent": user_agent})
+
+        # Route to appropriate handler based on domain
+        try:
+                      if "nanolinks" in key_url:
+                                        key, failed_url, error = handle_nano_links(key_url, session, verify, debug)
+                                    elif "arolinks" in key_url:
+                                                      key, failed_url, error = handle_aro_links(key_url, session, verify, debug)
+                                                  elif "lksfy" in key_url:
+                                                                    key, failed_url, error = handle_lksfy(key_url, session, verify, debug)
+                                                                else:
+                                                                                  # Default to nano handler
+                                                                                  key, failed_url, error = handle_nano_links(key_url, session, verify, debug)
+
+            if key:
+                              ok(f"Final key: {key}")
+                              sys.exit(0)
+                          else:
+                                            err(f"Failed to extract key from {key_url}")
+                                            sys.exit(1)
+                                    except Exception as e:
+            err(f"Error processing key URL: {e}")
+            if debug:
+                              raise
+                          sys.exit(1)
     try:
         # Try default method first
         try:
