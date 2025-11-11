@@ -2,12 +2,16 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import sys
+import requests
 from sigma_study_v4 import (
     get_initial_response_headers,
     build_combined,
     decode_b64_xor,
     extract_baseurl,
     fetch_key_flow,
+    handle_nano_links,
+    handle_aro_links,
+    handle_lksfy,
     DEFAULT_TARGET,
     DEFAULT_USER_AGENT,
     KEY,
@@ -22,7 +26,8 @@ def home():
     return jsonify({
         'message': 'Sigma Study API',
         'endpoints': {
-            '/api/get-key': 'GET - Extract key from target URL',
+            '/api/get-key': 'GET - Extract key from target URL (automatic)',
+            '/api/extract-key': 'POST - Extract key from user-provided link',
             '/api/health': 'GET - Health check'
         }
     })
@@ -31,8 +36,72 @@ def home():
 def health():
     return jsonify({'status': 'healthy', 'service': 'sigma-study-api'})
 
+@app.route('/api/extract-key', methods=['POST'])
+def extract_key():
+    """
+    New endpoint that accepts user-provided links from:
+    - nanolinks.com/in
+    - arolinks.com
+    - lksfy.com/in
+    """
+    try:
+        data = request.get_json()
+        if not data or 'link' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Missing "link" parameter in request body'
+            }), 400
+        
+        link = data['link']
+        
+        # Validate that the link is from supported domains
+        supported_domains = ['nanolinks', 'arolinks', 'lksfy']
+        if not any(domain in link for domain in supported_domains):
+            return jsonify({
+                'success': False,
+                'error': 'Unsupported domain. Please use links from nanolinks.com, arolinks.com, or lksfy.com'
+            }), 400
+        
+        # Create session
+        session = requests.Session()
+        session.headers.update({"User-Agent": DEFAULT_USER_AGENT})
+        
+        # Route to appropriate handler
+        if 'nanolinks' in link:
+            key, failed_url, error = handle_nano_links(link, session, True, False)
+        elif 'arolinks' in link:
+            key, failed_url, error = handle_aro_links(link, session, True, False)
+        elif 'lksfy' in link:
+            key, failed_url, error = handle_lksfy(link, session, True, False)
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Unsupported domain'
+            }), 400
+        
+        if key:
+            return jsonify({
+                'success': True,
+                'key': key
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': str(error) if error else 'Failed to extract key',
+                'failed_url': failed_url
+            }), 500
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/get-key', methods=['GET'])
 def get_key():
+    """
+    Original endpoint - automatic key extraction from default target
+    """
     try:
         # Get optional parameters
         target_url = request.args.get('target_url', DEFAULT_TARGET)
@@ -85,7 +154,7 @@ def get_key():
                 'error': str(error) if error else 'Failed to extract key',
                 'failed_url': failed_url
             }), 500
-            
+    
     except Exception as e:
         return jsonify({
             'success': False,
@@ -94,4 +163,4 @@ def get_key():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, debug=False)  
+    app.run(host='0.0.0.0', port=port, debug=False)
